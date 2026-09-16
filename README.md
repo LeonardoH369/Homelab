@@ -1,121 +1,116 @@
-# Homelab — Infraestructura Multi-Capa con Docker, pfSense, VLAN y Monitoreo
+# Homelab — Multi-Layer Infrastructure with Docker, pfSense, VLANs, and Monitoring
 
-![Status](https://img.shields.io/badge/status-en%20producción-brightgreen)
-![Docker](https://img.shields.io/badge/Docker-Portainer-2496ED?logo=docker&logoColor=white)
-![pfSense](https://img.shields.io/badge/Firewall-pfSense-212121?logo=pfsense&logoColor=white)
-![Network](https://img.shields.io/badge/Switch-Cisco%203750X-1BA0D7?logo=cisco&logoColor=white)
+[![Status](https://img.shields.io/badge/status-en%20producci%C3%B3n-brightgreen)](#) [![Docker](https://img.shields.io/badge/Docker-Portainer-2496ED?logo=docker&logoColor=white)](#) [![pfSense](https://img.shields.io/badge/Firewall-pfSense-212121?logo=pfsense&logoColor=white)](#) [![Network](https://img.shields.io/badge/Switch-Cisco%203750X-1BA0D7?logo=cisco&logoColor=white)](#)
 
-Homelab personal con arquitectura de varias capas (firewall dedicado, switch gestionado, host de contenedores y servidor de virtualización), diseñado para replicar patrones reales de operación empresarial/cloud: segmentación de red, acceso remoto seguro, monitoreo en tiempo real y gestión centralizada de servicios.
+A personal homelab with a multi-layer architecture (dedicated firewall, managed switch, container host, and virtualization server), designed to replicate real enterprise/cloud operation patterns: network segmentation, secure remote access, real-time monitoring, and centralized service management.
 
-Este proyecto nació de la necesidad de tener un entorno propio para practicar administración de sistemas Linux/Windows Server, redes (incluyendo hardware Cisco real) y observabilidad — habilidades directamente aplicables a roles de Networking, Cloud y Ciberseguridad.
+This project grew out of the need for a personal environment to practice Linux/Windows Server administration, networking (including real Cisco hardware), and observability — skills directly applicable to Networking, Cloud, and Cybersecurity roles.
 
-## Tabla de contenido
+## Table of Contents
 
-- [Arquitectura](#arquitectura)
-- [Componentes de la infraestructura](#componentes-de-la-infraestructura)
-- [Servicios desplegados](#servicios-desplegados-raspberry-pi-5--docker)
-- [Virtualización](#virtualización-pc-principal)
-- [Redes y segmentación](#redes-y-segmentación)
-- [Retos técnicos](#retos-técnicos-y-cómo-los-resolví)
-- [Mejoras futuras](#mejoras-futuras)
-- [Tecnologías](#tecnologías)
-- [Autor](#autor)
+- [Architecture](#architecture)
+- [Infrastructure Components](#infrastructure-components)
+- [Deployed Services](#deployed-services-raspberry-pi-5--docker)
+- [Virtualization](#virtualization-main-pc)
+- [Networking & Segmentation](#networking--segmentation)
+- [Technical Challenges](#technical-challenges-and-how-i-solved-them)
+- [Future Improvements](#future-improvements)
+- [Technologies](#technologies)
+- [Author](#author)
 
 ---
 
-## Arquitectura
+## Architecture
 
 ```
 Internet
    │
-Router ISP
+ISP Router
    │
-pfSense (Firewall) ── PC dedicada con NIC de doble puerto
+pfSense (Firewall) ── Dedicated PC with dual-port NIC
    │
-Switch Cisco Catalyst 3750X (24 puertos Gigabit) ── administración de red / VLANs
+Cisco Catalyst 3750X Switch (24 Gigabit ports) ── network management / VLANs
    │
-   ├── Raspberry Pi 5 (8GB, IP estática) ── host de contenedores Docker
+   ├── Raspberry Pi 5 (8GB, static IP) ── Docker container host
    │       └── Portainer, Pi-hole, Tailscale, Heimdall, Jellyfin, Navidrome, Grafana
    │
-   └── PC Principal ── host de virtualización
-           ├── VM Windows Server (Active Directory / GPOs)
-           └── VM Ubuntu Server
+   └── Main PC ── virtualization host
+           ├── Windows Server VM (Active Directory / GPOs)
+           └── Ubuntu Server VM
 ```
 
-La homelab está segmentada de la red doméstica normal, con pfSense como punto de control entre ambas y el switch gestionado 3750X manejando el tráfico interno.
+The homelab is segmented from the regular home network, with pfSense acting as the control point between the two and the managed 3750X switch handling internal traffic.
 
 ---
 
-## Componentes de la infraestructura
+## Infrastructure Components
 
-| Capa | Componente | Función |
-|---|---|---|
-| Firewall | pfSense (PC con NIC dual-puerto) | Filtrado de tráfico, segmentación entre red homelab y red doméstica |
-| Switching | Cisco Catalyst 3750X — 24 puertos Gigabit | Administración de red interna, gestión vía consola/SSH |
-| Cómputo (contenedores) | Raspberry Pi 5 (8GB RAM, IP estática) | Host principal de todos los servicios Dockerizados |
-| Cómputo (virtualización) | PC principal | Corre VMs de Windows Server y Ubuntu Server |
-| Conectividad remota | Router ISP | Salida a internet |
-
----
-
-## Servicios desplegados (Raspberry Pi 5 + Docker)
-
-| Servicio | Función |
-|---|---|
-| Portainer | Gestión visual y administración de contenedores/stacks Docker |
-| Docker Hub | Registro de imágenes usado para los contenedores del homelab |
-| Pi-hole | DNS local + bloqueo de publicidad/tracking a nivel de red |
-| Tailscale | VPN mesh (WireGuard) para acceso remoto seguro sin exponer puertos al público |
-| Heimdall | Dashboard centralizado de acceso a todos los servicios del homelab |
-| Jellyfin | Servidor de streaming multimedia |
-| Navidrome | Servidor de música self-hosted |
-| Grafana | Visualización de métricas y dashboards de monitoreo |
+| Layer                    | Component                                  | Function                                                          |
+| ------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
+| Firewall                  | pfSense (PC with dual-port NIC)            | Traffic filtering, segmentation between homelab and home network  |
+| Switching                 | Cisco Catalyst 3750X — 24 Gigabit ports    | Internal network management, console/SSH administration           |
+| Compute (containers)      | Raspberry Pi 5 (8GB RAM, static IP)        | Main host for all Dockerized services                             |
+| Compute (virtualization)  | Main PC                                    | Runs Windows Server and Ubuntu Server VMs                         |
+| Remote connectivity       | ISP Router                                 | Internet uplink                                                   |
 
 ---
 
-## Virtualización (PC principal)
+## Deployed Services (Raspberry Pi 5 + Docker)
 
-- VM Windows Server — Active Directory Domain Services (AD DS): usuarios, grupos, OUs y GPOs
-- VM Ubuntu Server — entorno adicional de pruebas/desarrollo
-
----
-
-## Redes y Segmentación
-
-- Homelab segmentada de la red doméstica principal mediante pfSense
-- Switch Cisco Catalyst 3750X administrando el tráfico interno del homelab
-- Raspberry Pi 5 con IP estática para garantizar disponibilidad consistente de los servicios
-
----
-
-## Retos técnicos y cómo los resolví
-
-**Conflicto de puertos entre contenedores**
-Pi-hole y otro servicio intentaban usar el mismo puerto (8080), lo que causaba que uno de los dos no levantara correctamente. Lo resolví remapeando el puerto expuesto de uno de los contenedores en el `docker-compose.yml`, entendiendo la diferencia entre el puerto interno del contenedor y el puerto publicado al host.
-
-**Acceso inicial al servidor (Raspberry Pi 5)**
-Al principio configurar el acceso remoto vía SSH al RPi5 fue un reto — desde la configuración inicial de la conexión hasta asegurar que fuera estable para administración remota. Una vez resuelto, esto se convirtió en la base para poder gestionar todo el homelab sin necesidad de monitor/teclado conectados directamente al Pi.
+| Service    | Function                                                                  |
+| ---------- | -------------------------------------------------------------------------- |
+| Portainer  | Visual management and administration of Docker containers/stacks         |
+| Docker Hub | Image registry used for the homelab's containers                        |
+| Pi-hole    | Local DNS + network-wide ad/tracker blocking                             |
+| Tailscale  | Mesh VPN (WireGuard) for secure remote access without exposing public ports |
+| Heimdall   | Centralized dashboard for accessing all homelab services                 |
+| Jellyfin   | Media streaming server                                                    |
+| Navidrome  | Self-hosted music server                                                  |
+| Grafana    | Metrics visualization and monitoring dashboards                          |
 
 ---
 
-## Mejoras futuras
+## Virtualization (Main PC)
 
-- [ ] Agregar Prometheus + Node Exporter como fuente de métricas para Grafana
-- [ ] Automatizar backups de configuración con un script
-- [ ] Documentar reglas de firewall en pfSense
-- [ ] Configurar VLANs adicionales en el switch 3750X para aislar aún más los servicios
-- [ ] Agregar reverse proxy (Nginx Proxy Manager / Traefik) con certificados TLS internos
+- Windows Server VM — Active Directory Domain Services (AD DS): users, groups, OUs, and GPOs
+- Ubuntu Server VM — additional testing/development environment
 
 ---
 
-## Tecnologías
+## Networking & Segmentation
+
+- Homelab segmented from the main home network via pfSense
+- Cisco Catalyst 3750X switch managing internal homelab traffic
+- Raspberry Pi 5 with a static IP to ensure consistent service availability
+
+---
+
+## Technical Challenges (and How I Solved Them)
+
+**Port conflict between containers** — Pi-hole and another service were both trying to use the same port (8080), causing one of them to fail to start correctly. I solved this by remapping the exposed port of one container in `docker-compose.yml`, which required understanding the difference between a container's internal port and the port published to the host.
+
+**Initial access to the server (Raspberry Pi 5)** — Setting up remote SSH access to the RPi5 was a challenge at first, from the initial connection setup to making it stable enough for remote administration. Once solved, this became the foundation for managing the entire homelab without a monitor/keyboard directly connected to the Pi.
+
+---
+
+## Future Improvements
+
+- [ ] Add Prometheus + Node Exporter as a metrics source for Grafana
+- [ ] Automate configuration backups with a script
+- [ ] Document pfSense firewall rules
+- [ ] Configure additional VLANs on the 3750X switch to further isolate services
+- [ ] Add a reverse proxy (Nginx Proxy Manager / Traefik) with internal TLS certificates
+
+---
+
+## Technologies
 
 `Docker` `Portainer` `Raspberry Pi 5` `pfSense` `Cisco Catalyst 3750X` `Grafana` `Pi-hole` `Tailscale` `Windows Server` `Active Directory` `Ubuntu Server` `SSH`
 
 ---
 
-## Autor
+## Author
 
 **Leonardo Hinojosa Castro**
-Estudiante de Ingeniería en Desarrollo de Software — Tecmilenio
+Software Development Engineering Student — Tecmilenio
 [LinkedIn](https://www.linkedin.com/in/leonardo-hinojosa-castro-323548224/)
